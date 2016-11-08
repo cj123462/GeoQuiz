@@ -12,10 +12,11 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "QuizActivity";
+    private static final String KEY_INDEX = "index";
     private Button mTrueButton;
     private Button mFalseButton;
-    private ImageButton mNextButton;
-    private ImageButton mPrevButton;
+    private Button mNextButton;
+    private Toast mAnswerToast;
     private TextView mQuestionTextView;
     private Question[] mQuestionBank = new Question[] {
             new Question(R.string.question_oceans, true),
@@ -37,26 +38,23 @@ public class MainActivity extends AppCompatActivity {
         } else {
             messageResId = R.string.incorrect_toast;
         }
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-                .show();
-    }
-    private void wrongNum(){
-        Toast.makeText(this, R.string.back_toast, Toast.LENGTH_SHORT).show();
+        if (mAnswerToast != null) mAnswerToast.cancel();
+        mAnswerToast = Toast.makeText(this, messageResId, Toast.LENGTH_SHORT);
+        mAnswerToast.show();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate(Bundle) called");
         setContentView(R.layout.activity_main);
+        Log.d(TAG, "onCreate(Bundle) called");
         mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
         int question = mQuestionBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
 
         mTrueButton = (Button) findViewById(R.id.true_button);
         mFalseButton = (Button) findViewById(R.id.false_button);
-        mNextButton = (ImageButton) findViewById(R.id.next_button);
-        mPrevButton = (ImageButton) findViewById(R.id.prev_button);
+        mNextButton = (Button) findViewById(R.id.next_button);
 
 
         mFalseButton.setOnClickListener(new View.OnClickListener() {
@@ -79,15 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 updateQuestion();
             }
         });
-        mPrevButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mCurrentIndex!=0){
-                    mCurrentIndex = (mCurrentIndex - 1) % mQuestionBank.length;
-                    updateQuestion();
-                } else wrongNum();
-            }
-        });
+
         mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +86,16 @@ public class MainActivity extends AppCompatActivity {
                 updateQuestion();
             }
         });
+        if (savedInstanceState != null) {
+            mCurrentIndex = savedInstanceState.getInt(KEY_INDEX);
+        }
         updateQuestion();
+    }
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        Log.i(TAG, "onSaveInstanceState");
+        savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
     }
     @Override
     public void onStart() {
